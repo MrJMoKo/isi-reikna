@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ISI reikna</title>
+<meta name="description" content="Das kleine 1×1 üben – für Volksschulkinder.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ISI reikna">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="bilder/app-icon-180.png">
+<link rel="icon" href="bilder/app-icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="app" id="app">
+
+  <!-- START -->
+  <section class="screen" id="s-start">
+    <div class="start">
+      <div class="hello">
+        <h1>ISI <span>reikna</span></h1>
+        <p>Übe das kleine 1×1 mit den Zahlen von 0 bis 10. Eine Runde hat 10 Aufgaben.</p>
+        <div class="friends" id="friends"></div>
+      </div>
+      <form class="name-card" id="name-form" novalidate>
+        <label for="name">Wie heißt du?</label>
+        <input id="name" name="name" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="20" placeholder="Dein Name">
+        <p class="name-error" id="name-error" role="alert"></p>
+        <button class="big-btn" type="submit">Los geht's</button>
+      </form>
+    </div>
+    <button class="parent-link" id="open-parents" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Eltern
+    </button>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <section class="screen" id="s-countdown" hidden>
+    <div class="center-screen">
+      <p id="cd-text">Mach dich bereit!</p>
+      <div class="count" id="cd-num" aria-live="assertive">3</div>
+    </div>
+  </section>
+
+  <!-- RECHNEN -->
+  <section class="screen" id="s-rechnen" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <div class="spacer"></div>
+      <span class="chip" id="who"></span>
+      <button class="icon-btn sound-btn" type="button" aria-label="Ton aus" title="Ton an/aus"></button>
+      <button class="icon-btn" type="button" id="abort" aria-label="Runde abbrechen" title="Runde abbrechen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="play">
+      <div class="task-side">
+        <div>
+          <div class="counter" id="counter"></div>
+          <div class="dots" id="dots"></div>
+        </div>
+        <div class="equation"><span id="task"></span><span class="answer empty" id="answer">?</span></div>
+        <div class="feedback" id="feedback" hidden></div>
+      </div>
+      <div class="pad-side"><div class="pad" id="pad"></div></div>
+    </div>
+  </section>
+
+  <!-- ABBRUCH -->
+  <section class="screen" id="s-abbruch" hidden>
+    <header class="topbar"><div class="brand">ISI <span>reikna</span></div></header>
+    <div class="center-screen">
+      <h2>Runde abgebrochen</h2>
+      <p>Du kannst jederzeit eine neue Runde starten.</p>
+      <div class="actions center">
+        <button class="big-btn" type="button" data-action="again">Neue Runde</button>
+        <button class="big-btn ghost" type="button" data-go="start">Zum Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ERGEBNIS -->
+  <section class="screen" id="s-ergebnis" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <div class="spacer"></div>
+      <span class="chip" id="who2"></span>
+      <button class="icon-btn sound-btn" type="button" aria-label="Ton aus" title="Ton an/aus"></button>
+    </header>
+    <div class="result">
+      <div class="reward">
+        <div class="badge" id="r-badge"><img id="r-img" alt=""></div>
+        <div class="stars" id="r-stars"></div>
+      </div>
+      <div class="summary">
+        <h2 id="r-title"></h2>
+        <p class="lead" id="r-lead"></p>
+        <dl class="stats">
+          <dt>Richtig</dt><dd id="r-correct"></dd>
+          <dt>Gesamtdauer</dt><dd id="r-total"></dd>
+          <dt>Schnellste Antwort</dt><dd id="r-fast"></dd>
+          <dt>Langsamste Antwort</dt><dd id="r-slow"></dd>
+        </dl>
+        <div class="actions">
+          <button class="big-btn" type="button" data-action="again">Nochmal üben</button>
+          <button class="big-btn ghost" type="button" data-go="start">Fertig</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIN -->
+  <section class="screen" id="s-pin" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <div class="spacer"></div>
+      <button class="back" type="button" id="pin-back">Zurück</button>
+    </header>
+    <div class="pin">
+      <div>
+        <h2 id="pin-title">Elternbereich</h2>
+        <p id="pin-text">Bitte die 4-stellige PIN eingeben.</p>
+        <div class="pin-dots" id="pin-dots"><i></i><i></i><i></i><i></i></div>
+        <div class="pin-msg" id="pin-msg" role="status"></div>
+        <button class="text-link" type="button" id="pin-forgot">PIN vergessen?</button>
+      </div>
+      <div class="pad" id="pin-pad"></div>
+    </div>
+  </section>
+
+  <!-- ELTERN ÜBERSICHT -->
+  <section class="screen" id="s-eltern" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <span class="chip">Elternbereich</span>
+      <div class="spacer"></div>
+      <button class="back" type="button" data-go="start">Abmelden</button>
+    </header>
+    <div class="parents">
+      <div class="p-main">
+        <h2>Alle Übungen</h2>
+        <p class="sub">Neueste zuerst. Tippe auf eine Übung, um jede Rechnung zu sehen.</p>
+        <div class="tbl-wrap" id="sessions-wrap">
+          <table>
+            <thead><tr><th>Datum</th><th>Kind</th><th>Ergebnis</th><th>Dauer</th><th>Ø Antwort</th><th>Schnellste</th><th>Langsamste</th><th></th></tr></thead>
+            <tbody id="sessions"></tbody>
+          </table>
+        </div>
+        <p class="empty-state" id="sessions-empty" hidden>Noch keine Übungen gespeichert. Sobald eine Runde gerechnet oder abgebrochen wird, erscheint sie hier.</p>
+      </div>
+      <aside class="p-side">
+        <h3>Daten &amp; Einstellungen</h3>
+        <button class="side-btn" type="button" id="export-json">Sicherung exportieren<small>Alle Übungen als Datei (.json)</small></button>
+        <button class="side-btn" type="button" id="export-csv">Für Excel exportieren<small>Alle Rechnungen als Tabelle (.csv)</small></button>
+        <button class="side-btn" type="button" id="import-json">Sicherung importieren<small>Übungen aus Datei hinzufügen</small></button>
+        <button class="side-btn" type="button" id="pin-change">PIN ändern<small>Neue 4-stellige PIN festlegen</small></button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden>
+        <p class="version">ISI reikna · Prototyp 0.1</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- DETAIL -->
+  <section class="screen" id="s-detail" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <span class="chip">Elternbereich</span>
+      <div class="spacer"></div>
+      <button class="back" type="button" data-go="eltern">Zur Übersicht</button>
+    </header>
+    <div class="p-main">
+      <h2 id="d-title"></h2>
+      <p class="sub" id="d-sub"></p>
+      <div class="tiles">
+        <div class="tile"><span>Richtig</span><b id="d-correct"></b></div>
+        <div class="tile"><span>Gesamtdauer</span><b id="d-total"></b></div>
+        <div class="tile"><span>Ø Antwortzeit</span><b id="d-avg"></b></div>
+        <div class="tile"><span>Schnellste</span><b id="d-fast"></b></div>
+        <div class="tile"><span>Langsamste</span><b id="d-slow"></b></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nr.</th><th>Aufgabe</th><th>Reihe</th><th>Eingabe</th><th>Richtige Lösung</th><th>Ergebnis</th><th>Dauer</th></tr></thead>
+          <tbody id="calcs"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dialog -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+      <h2 id="dlg-title"></h2>
+      <p id="dlg-text"></p>
+      <input id="dlg-input" inputmode="numeric" autocomplete="off" hidden>
+      <div class="actions" id="dlg-actions"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden role="status"></div>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
