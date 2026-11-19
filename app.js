@@ -1,4 +1,4 @@
-/* ISI reikna – Rechnen üben (Version 0.2)
+/* ISI reikna – Rechnen üben (Version 0.2.1)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';
@@ -146,6 +146,9 @@ function speichern() {
 
 /* ======================= Hilfsfunktionen ======================= */
 const $ = s => document.querySelector(s);
+// Ersatz für ältere Safari-Versionen (iPadOS 15): Größeneinheit --cq aus der App-Breite berechnen
+const KEIN_CQI = !(window.CSS && CSS.supports && CSS.supports('width', '1cqi'));
+function setzeEinheit() { if (KEIN_CQI) { const app = $('#app'); app.style.setProperty('--cq', (app.clientWidth / 100) + 'px'); } }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const kindKey = name => name.trim().toLocaleLowerCase('de-AT');
 const fmtS = ms => (ms / 1000).toFixed(1).replace('.', ',') + ' s';
@@ -378,7 +381,8 @@ function passeGleichungAn() {
   let groesse = parseFloat(getComputedStyle(eq).fontSize);
   while (eq.scrollWidth > eq.clientWidth + 1 && groesse > 28) { groesse -= 3; eq.style.fontSize = groesse + 'px'; }
 }
-window.addEventListener('resize', passeGleichungAn);
+window.addEventListener('resize', () => { setzeEinheit(); passeGleichungAn(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { setzeEinheit(); passeGleichungAn(); }, 300));
 function zeigeAufgabe() {
   const t = spiel.aufgaben[spiel.i];
   spiel.eingabe = ''; spiel.gesperrt = false; spiel.t0 = Date.now();
@@ -635,6 +639,7 @@ $('#import-file').addEventListener('change', async e => {
 });
 
 /* ======================= Los geht's ======================= */
+setzeEinheit();
 zeigeTon();
 zeige('start');
 // Für Tests in der Browser-Konsole
