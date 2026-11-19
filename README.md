@@ -13,7 +13,7 @@ Für die iPad-Ansicht: `F12` → `Strg+Umschalt+M` → oben „iPad“ wählen u
 
 **Eigener Webserver:** Den ganzen Ordner unverändert hochladen. Es wird keine Server-Software benötigt.
 
-## Funktionen (Version 0.4)
+## Funktionen (Version 0.5)
 
 - Name eingeben (der zuletzt verwendete Name ist vorausgefüllt), dann Rechenart und Schwierigkeit wählen
   (die letzte Auswahl ist vorausgewählt), danach Countdown 3 – 2 – 1
@@ -26,12 +26,12 @@ ist bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden üb
 |-----------|-----------------|-----------------|---------|
 | Plus      | Einfach: Ergebnisse bis 10 | Standard: Ergebnisse bis 100 | Meine Wahl: Höchstwert 20 / 50 / 100 / 200 / 500 / 1000 |
 | Minus     | Einfach: Zahlen bis 10 | Standard: Zahlen bis 100 | Meine Wahl: höchste Ausgangszahl 20 / 50 / 100 / 200 / 500 / 1000 |
-| Mal       | Einfach: eine gewählte Reihe (0er bis 10er) | Standard: alle Reihen 0 bis 10 | Schwierig: Reihen 5 bis 10, jedes Ergebnis über 25 |
+| Mal       | Einfach: eine gewählte Reihe (0er bis 10er), alle 11 Aufgaben in Reihenfolge 0 × r … 10 × r | Standard: alle Reihen 0 bis 10 | Schwierig: Reihen 5 bis 10, jedes Ergebnis über 25 |
 
 - **Gleichverteilung:** Pro Kind **und pro Übungsart** (z. B. „Mal · Einfach · 7er“ oder „Plus · Meine Wahl · bis 500“)
   wird eine eigene Statistik über die letzten 100 Rechnungen geführt, damit sich die Stufen nicht gegenseitig verzerren.
   - Mal: Die Reihe bestimmt der **zweite** Faktor (1 × 10 gehört zur 10er-Reihe). Es kommt immer eine der Reihen dran,
-    die am seltensten vorkam. Bei „Einfach“ werden stattdessen die Aufgaben der gewählten Reihe gleichmäßig verteilt.
+    die am seltensten vorkam. Bei „Einfach“ kommt stattdessen die ganze gewählte Reihe aufsteigend (11 Aufgaben).
   - Plus: Die Ergebnisse verteilen sich gleichmäßig auf bis zu 10 Bereiche (bei bis 100: 2–11, 12–21 … 92–100,
     bei bis 10: jedes Ergebnis 2 … 10 einzeln). Etwa die Hälfte der Aufgaben hat einen Zehnerübergang (bei „bis 10“
     nur die Aufgaben mit Ergebnis 10, bei „bis 20“ weniger), „+ 0“ kommt nur selten vor.
@@ -40,6 +40,7 @@ ist bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden üb
     Etwa die Hälfte hat einen Zehnerübergang (z. B. 43 − 8); „− 0“ und Ergebnis 0 kommen nur selten vor.
   - Es werden nur Gruppen verwendet, in denen es passende Aufgaben gibt. Ist eine erschöpft, kommt die nächstseltene dran.
   - Keine Rechnung kommt in einer Runde doppelt vor, eine falsch gelöste also auch nicht.
+- Fortschrittsanzeige: Der Kreis einer Aufgabe wird sofort bei der Rückmeldung grün bzw. rot
 - Meldung „Richtig!“ (automatisch weiter nach 2 s) bzw. „Leider falsch.“ mit Lösung (weiter nach 5 s), „Weiter“-Taste jederzeit
 - Töne, abschaltbar
 - Abbrechen mit Rückfrage; abgebrochene Runden werden mit den bisherigen Antworten gespeichert
@@ -47,7 +48,7 @@ ist bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden üb
 
 | Richtig | Figur    | Sterne |
 |---------|----------|--------|
-| 10      | Kaffi    | 5      |
+| 10 (bzw. 10–11 bei einer ganzen Malreihe) | Kaffi    | 5      |
 | 8–9     | Flauschi | 4      |
 | 5–7     | Buh      | 3      |
 | 1–4     | Pingu    | 2      |
@@ -90,6 +91,5 @@ den Dateinamen in `CONFIG.stufen` in `app.js` anpassen). Die Bilder werden rund 
 
 Siehe [Issues](https://github.com/MrJMoKo/isi-reikna/issues):
 
-- (Prio 2) Fortschrittskreis schon während der Rückmeldung grün/rot ausfüllen (#1)
 - (Prio 2) Hosting mit eigener Domain (#2)
 - (Prio 3) Export: einzelne oder alle Übungen auswählen (#3)

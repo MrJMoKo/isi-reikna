@@ -1,11 +1,11 @@
-/* ISI reikna – Rechnen üben (Version 0.4)
+/* ISI reikna – Rechnen üben (Version 0.5)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';
 
 /* ======================= Einstellungen ======================= */
 const CONFIG = {
-  aufgabenProRunde: 10,
+  aufgabenProRunde: 10,                         // Ausnahme: Malrechnen · Einfach übt die ganze Reihe (11 Aufgaben)
   historie: 100,                                // Gleichverteilung über die letzten 100 Rechnungen (pro Kind und Übungsart)
   weiterNachRichtigMs: 2000,
   weiterNachFalschMs: 5000,
@@ -16,13 +16,13 @@ const CONFIG = {
   // Belohnungsstufen: "ab" = Mindestanzahl richtiger Antworten. Bilder liegen im Ordner bilder/.
   stufen: [
     { ab: 10, figur: 'Kaffi',    bild: 'bilder/kaffi.svg',    farbe: 'horse', sterne: 5,
-      titel: n => `Perfekt, ${n}!`,       text: () => 'Alle 10 Aufgaben richtig. Kaffi galoppiert vor Freude!' },
+      titel: (n, c, g) => c === g ? `Perfekt, ${n}!` : `Fantastisch, ${n}!`,       text: (c, g) => (c === g ? `Alle ${g} Aufgaben richtig.` : `${c} von ${g} Aufgaben richtig.`) + ' Kaffi galoppiert vor Freude!' },
     { ab: 8,  figur: 'Flauschi', bild: 'bilder/flauschi.svg', farbe: 'puppy', sterne: 4,
-      titel: n => `Super gemacht, ${n}!`, text: c => `${c} von 10 Aufgaben richtig. Flauschi wedelt mit dem Schwanz.` },
+      titel: n => `Super gemacht, ${n}!`, text: (c, g) => `${c} von ${g} Aufgaben richtig. Flauschi wedelt mit dem Schwanz.` },
     { ab: 5,  figur: 'Buh',      bild: 'bilder/buh.svg',      farbe: 'ghost', sterne: 3,
-      titel: n => `Gut gemacht, ${n}!`,   text: c => `${c} von 10 Aufgaben richtig. Buh sagt: Weiter so!` },
+      titel: n => `Gut gemacht, ${n}!`,   text: (c, g) => `${c} von ${g} Aufgaben richtig. Buh sagt: Weiter so!` },
     { ab: 1,  figur: 'Pingu',    bild: 'bilder/pingu.svg',    farbe: 'pingu', sterne: 2,
-      titel: n => `Weiter üben, ${n}!`,   text: c => `${c} von 10 Aufgaben richtig. Pingu watschelt mit dir in die nächste Runde.` },
+      titel: n => `Weiter üben, ${n}!`,   text: (c, g) => `${c} von ${g} Aufgaben richtig. Pingu watschelt mit dir in die nächste Runde.` },
     { ab: 0,  figur: 'Rexi',     bild: 'bilder/rexi.svg',     farbe: 'rex',   sterne: 1,
       titel: n => `Dranbleiben, ${n}!`,   text: () => 'Diesmal hat es noch nicht geklappt. Rexi übt mit dir, nächstes Mal wird es besser.' },
   ],
@@ -82,8 +82,9 @@ function modusAus(w) {
     m.maxStellen = 3;
     if (w.stufe === 'einfach') {
       const r = w.reihe;
+      // Die ganze Reihe in Reihenfolge: 0 × r, 1 × r … 10 × r (11 Aufgaben)
       Object.assign(m, { option: { reihe: r }, optionText: `${r}er-Reihe`, key: `mal|einfach|${r}`,
-        gruppen: ZAHLEN, erzeuge: (g, benutzt) => freiAus([{ a: g, b: r }], benutzt, z) });
+        gruppen: ZAHLEN, festeRunde: () => ZAHLEN.map(a => ({ a, b: r, gruppe: a })) });
     } else if (w.stufe === 'schwierig') {
       Object.assign(m, { key: 'mal|schwierig', gruppen: [5, 6, 7, 8, 9, 10],
         erzeuge: (g, benutzt) => freiAus(ZAHLEN.filter(a => a * g > 25).map(a => ({ a, b: g })), benutzt, z) });
@@ -218,6 +219,7 @@ function letzteGruppen(key, modusKey, max) {
 // (inkl. dieser Runde) am seltensten vorkam. Ist eine Gruppe erschöpft, kommt die nächstseltene dran.
 // Keine Rechnung kommt in einer Runde doppelt vor.
 function neueRunde(modus, key) {
+  if (modus.festeRunde) return modus.festeRunde().map(t => Object.assign({ op: modus.rechenart, loesung: modus.rechne(t.a, t.b) }, t));
   const n = CONFIG.aufgabenProRunde;
   const anzahl = new Map(modus.gruppen.map(g => [g, 0]));
   letzteGruppen(key, modus.key, CONFIG.historie - n).forEach(g => { if (anzahl.has(g)) anzahl.set(g, anzahl.get(g) + 1); });
@@ -417,12 +419,16 @@ function zeigeAufgabe() {
   const t = spiel.aufgaben[spiel.i];
   spiel.eingabe = ''; spiel.gesperrt = false; spiel.t0 = Date.now();
   $('#task').innerHTML = `${aufgabeHtml(t)} =`;
-  $('#counter').textContent = `Aufgabe ${spiel.i + 1} von ${CONFIG.aufgabenProRunde} · ${RECHENARTEN[spiel.modus.rechenart].name}`;
-  $('#dots').innerHTML = spiel.aufgaben.map((_, j) => `<i class="${j < spiel.rechnungen.length ? (spiel.rechnungen[j].richtig ? 'ok' : 'no') : j === spiel.i ? 'now' : ''}"></i>`).join('');
+  $('#counter').textContent = `Aufgabe ${spiel.i + 1} von ${spiel.aufgaben.length} · ${RECHENARTEN[spiel.modus.rechenart].name}`;
+  zeigePunkte();
   $('#feedback').hidden = true;
   $('#pad').querySelectorAll('button').forEach(b => { b.disabled = false; });
   zeigeEingabe();
   passeGleichungAn();
+}
+// Fortschritt: beantwortete Aufgaben grün/rot, aktuelle (noch offene) Aufgabe als Ring
+function zeigePunkte() {
+  $('#dots').innerHTML = spiel.aufgaben.map((_, j) => `<i class="${j < spiel.rechnungen.length ? (spiel.rechnungen[j].richtig ? 'ok' : 'no') : j === spiel.i ? 'now' : ''}"></i>`).join('');
 }
 function zeigeEingabe(zustand) {
   const el = $('#answer');
@@ -444,10 +450,11 @@ function pruefe() {
   if (t.op === 'mal') r.reihe = t.b; else r.uebergang = t.uebergang;
   spiel.rechnungen.push(r);
   spiel.gesperrt = true;
+  zeigePunkte();   // Issue #1: Kreis sofort grün/rot füllen
   $('#pad').querySelectorAll('button').forEach(btn => { btn.disabled = true; });
   zeigeEingabe(ok ? 'ok' : 'no');
   const wartezeit = ok ? CONFIG.weiterNachRichtigMs : CONFIG.weiterNachFalschMs;
-  const letzte = spiel.i === CONFIG.aufgabenProRunde - 1;
+  const letzte = spiel.i === spiel.aufgaben.length - 1;
   const fb = $('#feedback');
   fb.className = 'feedback ' + (ok ? 'ok' : 'no');
   fb.innerHTML = `<div class="fb-icon">${ok
@@ -470,7 +477,7 @@ function weiter() {
   clearTimeout(spiel.auto);
   if (!spiel.gesperrt || !spiel.aktiv || dialogOffen()) return;
   spiel.i++;
-  if (spiel.i < CONFIG.aufgabenProRunde) return zeigeAufgabe();
+  if (spiel.i < spiel.aufgaben.length) return zeigeAufgabe();
   const u = rundeSpeichern(false, spiel.letzteAntwort - spiel.start - spiel.pause);
   zeigeErgebnis(u);
   zeige('ergebnis');
@@ -522,10 +529,10 @@ function zeigeErgebnis(u) {
   $('#r-img').src = s.bild; $('#r-img').alt = s.figur;
   $('#r-stars').innerHTML = `<img src="${STERN_BILD}" alt="">`.repeat(s.sterne);
   $('#r-stars').setAttribute('aria-label', s.sterne === 1 ? '1 Stern' : `${s.sterne} Sterne`);
-  $('#r-title').textContent = s.titel(u.kind);
-  $('#r-lead').textContent = s.text(a.richtig);
+  $('#r-title').textContent = s.titel(u.kind, a.richtig, a.anzahl);
+  $('#r-lead').textContent = s.text(a.richtig, a.anzahl);
   $('#r-mode').textContent = modusVonUebung(u).label;
-  $('#r-correct').textContent = `${a.richtig} von ${CONFIG.aufgabenProRunde}`;
+  $('#r-correct').textContent = `${a.richtig} von ${a.anzahl}`;
   $('#r-total').textContent = fmtMin(u.dauerMs);
   $('#r-fast').innerHTML = `${fmtS(a.schnellste.ms)} <small>bei ${aufgabeHtml(a.schnellste)}</small>`;
   $('#r-slow').innerHTML = `${fmtS(a.langsamste.ms)} <small>bei ${aufgabeHtml(a.langsamste)}</small>`;
