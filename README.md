@@ -90,10 +90,18 @@ den Dateinamen in `CONFIG.stufen` in `app.js` anpassen). Die Bilder werden rund 
 2. Mehrere Kinder getrennt im Dashboard (Übungen werden bereits pro Kind gespeichert)
 3. Malrechnen: zusätzliche Schwierigkeitsstufe „Individuell“ (genaue Definition noch offen)
 4. Bilderauswahl für Eltern
+5. Hosting auf eigenem Server mit eigener Domain bzw. Umsetzung als App
+   (bisher Issue #2). Zu klären: Domain (vorhanden oder neu), eigener Webserver oder GitHub Pages mit eigener
+   Domain, ob zusätzlich eine App für den App Store nötig ist. Beim Umzug auf eine neue Adresse vorher im
+   Elternbereich „Sicherung exportieren“ und danach „Sicherung importieren“, da die Daten an der Adresse hängen
+   (siehe auch #11).
 
 ## Offene Verbesserungen
 
 Siehe [Issues](https://github.com/MrJMoKo/isi-reikna/issues):
 
-- (Prio 2) Hosting mit eigener Domain (#2)
 - (Prio 3) Export: einzelne oder alle Übungen auswählen (#3)
+- (Prio 3) Divisionszeichen ÷ wirkt unnatürlich (#8)
+- (Prio 3) Erklärungstext auf den Schwierigkeits-Tasten entfernen (#9)
+- Kennzeichnung „Elternbereich“ sieht wie eine Taste aus (#10)
+- Alle Daten werden nur lokal im Browser gespeichert (#11)
