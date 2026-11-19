@@ -13,11 +13,15 @@ Für die iPad-Ansicht: `F12` → `Strg+Umschalt+M` → oben „iPad“ wählen u
 
 **Eigener Webserver:** Den ganzen Ordner unverändert hochladen. Es wird keine Server-Software benötigt.
 
-## Funktionen (Version 0.6)
+## Funktionen (Version 0.7)
 
 - Name eingeben (der zuletzt verwendete Name ist vorausgefüllt), dann Rechenart und Schwierigkeit wählen
   (die letzte Auswahl ist vorausgewählt), danach Countdown 3 – 2 – 1
 - 10 Aufgaben pro Runde, Eingabe über großes Ziffernfeld (oder Tastatur)
+
+**App-Icon und Logo:** Das Icon zeigt „ISI“ auf blauer Fläche, die beiden I als weiße Balken, das S in Orange.
+Im Logo „ISI reikna“ sind beide I blau, das S orange und „reikna“ in Schriftfarbe (dunkel auf hellem, weiß auf
+dunklem Hintergrund).
 
 Auswahl-Bildschirm: Rechenarten in zwei Zeilen, **Plus | Minus** und **Mal | Dividieren**.
 Rechenzeichen werden überall orange dargestellt; das Divisionszeichen ÷ ist dasselbe Minuszeichen mit je einem
@@ -76,7 +80,7 @@ Achtung: Wird in Safari „Verlauf und Websitedaten löschen“ ausgeführt, sin
 index.html      Bildschirme
 app.css         Gestaltung (Farben als Variablen am Anfang, heller und dunkler Modus)
 app.js          Logik; ganz oben CONFIG mit allen Einstellungen (Zeiten, Stufen, Bilder, Start-PIN)
-bilder/         Belohnungsbilder (SVG), Stern und App-Icon
+bilder/         Belohnungsbilder (SVG), Stern und App-Icon (app-icon.svg; app-icon-180.png für den iPad-Startbildschirm)
 schriften/      Schriften Fredoka und Nunito (SIL Open Font License)
 mockup/         Das klickbare Mockup aus der Planungsphase (nur zur Dokumentation)
 ```

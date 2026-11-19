@@ -1,4 +1,4 @@
-/* ISI reikna – Rechnen üben (Version 0.6)
+/* ISI reikna – Rechnen üben (Version 0.7)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';

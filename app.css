@@ -279,9 +279,12 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .app { --cq: 10px; }
 @supports (width: 1cqi) { .app { --cq: 1cqi; } }
 
-/* Logo: „ISI“ blau, „reikna“ in der Komplementärfarbe */
-.brand, .hello h1 { color: var(--primary); }
-.brand span, .hello h1 span { color: var(--brand-2); }
+/* Logo (Version 0.7): beide „I“ blau, „S“ orange wie im App-Icon; „reikna“ in Schriftfarbe
+   (dunkel auf hellem, weiß auf dunklem Hintergrund) */
+.brand, .hello h1 { color: var(--ink); }
+.brand .logo-i, .hello h1 .logo-i { color: var(--primary); }
+.brand .logo-s, .hello h1 .logo-s { color: var(--brand-2); }
+.brand .logo-r, .hello h1 .logo-r { color: var(--ink); }
 
 /* Version 0.3: Rechenarten in zwei Zeilen (Plus | Minus, Mal | Dividieren), orange Rechenzeichen */
 .zeichen { color: var(--brand-2); }
