@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ISI reikna</title>
-<meta name="description" content="Das kleine 1×1 üben – für Volksschulkinder.">
+<meta name="description" content="Rechnen üben – für Volksschulkinder.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ISI reikna">
@@ -21,7 +21,7 @@
     <div class="start">
       <div class="hello">
         <h1>ISI <span>reikna</span></h1>
-        <p>Übe das kleine 1×1 mit den Zahlen von 0 bis 10. Eine Runde hat 10 Aufgaben.</p>
+        <p>Übe das Rechnen mit allen Rechnungsarten. Eine Runde hat 10 Aufgaben.</p>
         <div class="friends" id="friends"></div>
       </div>
       <form class="name-card" id="name-form" novalidate>
@@ -37,11 +37,49 @@
     </button>
   </section>
 
+  <!-- AUSWAHL -->
+  <section class="screen" id="s-auswahl" hidden>
+    <header class="topbar">
+      <div class="brand">ISI <span>reikna</span></div>
+      <div class="spacer"></div>
+      <button class="back" type="button" data-go="start">Zurück</button>
+    </header>
+    <div class="choose">
+      <div class="choose-main">
+        <h2 id="a-title">Was möchtest du üben?</h2>
+        <div class="choose-group">
+          <h3>Rechenart</h3>
+          <div class="choice-grid two">
+            <button type="button" class="choice op" data-rechenart="mal"><b>×</b>Malrechnen</button>
+            <button type="button" class="choice op" data-rechenart="plus"><b>+</b>Plusrechnen</button>
+          </div>
+        </div>
+        <div class="choose-group">
+          <h3>Schwierigkeit</h3>
+          <div class="choice-grid three">
+            <button type="button" class="choice level" data-stufe="einfach">Einfach<small></small></button>
+            <button type="button" class="choice level" data-stufe="standard">Standard<small></small></button>
+            <button type="button" class="choice level" data-stufe="schwierig">Schwierig<small></small></button>
+          </div>
+        </div>
+      </div>
+      <div class="choose-side">
+        <div class="choose-option" id="a-option"></div>
+        <div class="choose-go">
+          <p class="hint">Du übst:</p>
+          <p class="choose-summary" id="a-summary"></p>
+          <button class="big-btn" type="button" id="a-start">Los geht's</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- COUNTDOWN -->
   <section class="screen" id="s-countdown" hidden>
     <div class="center-screen">
       <p id="cd-text">Mach dich bereit!</p>
       <div class="count" id="cd-num" aria-live="assertive">3</div>
+      <p class="cd-mode" id="cd-mode"></p>
     </div>
   </section>
 
@@ -77,6 +115,7 @@
       <p>Du kannst jederzeit eine neue Runde starten.</p>
       <div class="actions center">
         <button class="big-btn" type="button" data-action="again">Neue Runde</button>
+        <button class="big-btn ghost" type="button" data-go="auswahl">Andere Übung</button>
         <button class="big-btn ghost" type="button" data-go="start">Zum Start</button>
       </div>
     </div>
@@ -99,6 +138,7 @@
         <h2 id="r-title"></h2>
         <p class="lead" id="r-lead"></p>
         <dl class="stats">
+          <dt>Übung</dt><dd id="r-mode"></dd>
           <dt>Richtig</dt><dd id="r-correct"></dd>
           <dt>Gesamtdauer</dt><dd id="r-total"></dd>
           <dt>Schnellste Antwort</dt><dd id="r-fast"></dd>
@@ -106,6 +146,7 @@
         </dl>
         <div class="actions">
           <button class="big-btn" type="button" data-action="again">Nochmal üben</button>
+          <button class="big-btn ghost" type="button" data-go="auswahl">Andere Übung</button>
           <button class="big-btn ghost" type="button" data-go="start">Fertig</button>
         </div>
       </div>
@@ -145,7 +186,7 @@
         <p class="sub">Neueste zuerst. Tippe auf eine Übung, um jede Rechnung zu sehen.</p>
         <div class="tbl-wrap" id="sessions-wrap">
           <table>
-            <thead><tr><th>Datum</th><th>Kind</th><th>Ergebnis</th><th>Dauer</th><th>Ø Antwort</th><th>Schnellste</th><th>Langsamste</th><th></th></tr></thead>
+            <thead><tr><th>Datum</th><th>Kind</th><th>Übung</th><th>Ergebnis</th><th>Dauer</th><th>Ø Antwort</th><th>Schnellste</th><th>Langsamste</th><th></th></tr></thead>
             <tbody id="sessions"></tbody>
           </table>
         </div>
@@ -158,7 +199,7 @@
         <button class="side-btn" type="button" id="import-json">Sicherung importieren<small>Übungen aus Datei hinzufügen</small></button>
         <button class="side-btn" type="button" id="pin-change">PIN ändern<small>Neue 4-stellige PIN festlegen</small></button>
         <input type="file" id="import-file" accept=".json,application/json" hidden>
-        <p class="version">ISI reikna · Prototyp 0.1</p>
+        <p class="version">ISI reikna · Version 0.2</p>
       </aside>
     </div>
   </section>
@@ -183,7 +224,7 @@
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Nr.</th><th>Aufgabe</th><th>Reihe</th><th>Eingabe</th><th>Richtige Lösung</th><th>Ergebnis</th><th>Dauer</th></tr></thead>
+          <thead><tr><th>Nr.</th><th>Aufgabe</th><th id="d-info-head">Reihe</th><th>Eingabe</th><th>Richtige Lösung</th><th>Ergebnis</th><th>Dauer</th></tr></thead>
           <tbody id="calcs"></tbody>
         </table>
       </div>

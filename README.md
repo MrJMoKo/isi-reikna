@@ -1,6 +1,6 @@
 # ISI reikna
 
-Lern-App für das kleine 1×1 (Zahlen 0 bis 10) für Volksschulkinder, optimiert für das iPad im Querformat.
+Lern-App zum Rechnen üben (Malrechnen und Plusrechnen) für Volksschulkinder, optimiert für das iPad im Querformat.
 Reines HTML, CSS und JavaScript, ohne Installation, ohne Server und ohne Internetverbindung nutzbar.
 
 ## Starten
@@ -13,17 +13,30 @@ Für die iPad-Ansicht: `F12` → `Strg+Umschalt+M` → oben „iPad“ wählen u
 
 **Eigener Webserver:** Den ganzen Ordner unverändert hochladen. Es wird keine Server-Software benötigt.
 
-## Funktionen (Prototyp 0.1)
+## Funktionen (Version 0.2)
 
-- Name eingeben (der zuletzt verwendete Name ist vorausgefüllt), danach Countdown 3 – 2 – 1
+- Name eingeben (der zuletzt verwendete Name ist vorausgefüllt), dann Rechenart und Schwierigkeit wählen
+  (die letzte Auswahl ist vorausgewählt), danach Countdown 3 – 2 – 1
 - 10 Aufgaben pro Runde, Eingabe über großes Ziffernfeld (oder Tastatur)
-- Gleichverteilung: Die Reihe bestimmt der **zweite** Faktor (1 × 10 gehört zur 10er-Reihe).
-  Pro Kind wird immer eine Reihe gewählt, die in den letzten 100 Rechnungen am seltensten vorkam.
-  Keine Rechnung kommt in einer Runde doppelt vor, eine falsch gelöste also auch nicht.
+
+| Rechenart | Einfach | Standard | Schwierig |
+|-----------|---------|----------|-----------|
+| Mal       | eine gewählte Reihe (0er bis 10er) | alle Reihen 0 bis 10 | Reihen 5 bis 10, jedes Ergebnis über 25 |
+| Plus      | Ergebnis bis 20 | Ergebnis bis 100 | Höchstwert wählbar: 20 / 50 / 100 / 200 / 500 / 1000 |
+
+- **Gleichverteilung:** Pro Kind **und pro Übungsart** (z. B. „Mal · Einfach · 7er“ oder „Plus · Schwierig · bis 500“)
+  wird eine eigene Statistik über die letzten 100 Rechnungen geführt, damit sich die Stufen nicht gegenseitig verzerren.
+  - Mal: Die Reihe bestimmt der **zweite** Faktor (1 × 10 gehört zur 10er-Reihe). Es kommt immer eine der Reihen dran,
+    die am seltensten vorkam. Bei „Einfach“ werden stattdessen die Aufgaben der gewählten Reihe gleichmäßig verteilt.
+  - Plus: Die Ergebnisse verteilen sich gleichmäßig auf 10 Bereiche (bei bis 100: 2–11, 12–21 … 92–100).
+    Etwa die Hälfte der Aufgaben hat einen Zehnerübergang (bei „bis 20“ weniger, weil kleine Ergebnisse keinen haben
+    können), „+ 0“ kommt nur selten vor.
+  - Es werden nur Gruppen verwendet, in denen es passende Aufgaben gibt. Ist eine erschöpft, kommt die nächstseltene dran.
+  - Keine Rechnung kommt in einer Runde doppelt vor, eine falsch gelöste also auch nicht.
 - Meldung „Richtig!“ (automatisch weiter nach 2 s) bzw. „Leider falsch.“ mit Lösung (weiter nach 5 s), „Weiter“-Taste jederzeit
 - Töne, abschaltbar
 - Abbrechen mit Rückfrage; abgebrochene Runden werden mit den bisherigen Antworten gespeichert
-- Ergebnis mit Belohnungsbild, Sternen, Gesamtdauer, schnellster und langsamster Antwort
+- Ergebnis mit Belohnungsbild, Sternen, Übungsart, Gesamtdauer, schnellster und langsamster Antwort (gleiche Figuren für alle Übungsarten)
 
 | Richtig | Figur    | Sterne |
 |---------|----------|--------|
@@ -33,7 +46,7 @@ Für die iPad-Ansicht: `F12` → `Strg+Umschalt+M` → oben „iPad“ wählen u
 | 1–4     | Pingu    | 2      |
 | 0       | Rexi     | 1      |
 
-- **Elternbereich** (PIN, Start-PIN `1234`): alle Übungen mit Ergebnis, Dauer, Ø Antwortzeit, schnellster und
+- **Elternbereich** (PIN, Start-PIN `1234`): alle Übungen mit Rechenart, Stufe, Ergebnis, Dauer, Ø Antwortzeit, schnellster und
   langsamster Antwort; Detailansicht mit jeder Rechnung; PIN ändern; „PIN vergessen?“ (Rechenfrage für Erwachsene
   setzt die PIN auf `1234` zurück); Export als Sicherung (.json) oder für Excel (.csv); Import einer Sicherung.
 
@@ -61,7 +74,12 @@ den Dateinamen in `CONFIG.stufen` in `app.js` anpassen). Die Bilder werden rund 
 ## Geplante Erweiterungen
 
 1. Eltern-Dashboard: beste und schlechteste Zahlenreihen über die letzten 30 Übungen
-2. Auswahl der Rechenart für Kinder (im Datenmodell bereits als `rechenart` vorgesehen)
-3. Mehrere Kinder getrennt im Dashboard (Übungen werden bereits pro Kind gespeichert)
-4. Schwierigkeitsgrad einfach / normal / schwierig (im Datenmodell bereits als `stufe` vorgesehen)
-5. Bilderauswahl für Eltern
+2. Mehrere Kinder getrennt im Dashboard (Übungen werden bereits pro Kind gespeichert)
+3. Weitere Rechenarten: Minus und Division
+4. Bilderauswahl für Eltern
+
+## Offene Verbesserungen
+
+- (Prio 2) Fortschrittskreis schon während der Rückmeldung grün/rot ausfüllen
+- (Prio 2) Hosting mit eigener Domain
+- (Prio 3) Export: einzelne oder alle Übungen auswählen
