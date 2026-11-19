@@ -1,4 +1,4 @@
-/* ISI reikna – Rechnen üben (Version 0.3)
+/* ISI reikna – Rechnen üben (Version 0.4)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';
@@ -10,9 +10,9 @@ const CONFIG = {
   weiterNachRichtigMs: 2000,
   weiterNachFalschMs: 5000,
   startPin: '1234',
-  plusHoechstwerte: [20, 50, 100, 200, 500, 1000], // Auswahl bei Plus „Schwierig“
-  plusMitNullAnteil: 0.05,                      // so selten kommt „+ 0“ vor
-  plusUebergangAnteil: 0.5,                     // Anteil der Aufgaben mit Zehnerübergang
+  plusHoechstwerte: [20, 50, 100, 200, 500, 1000], // Auswahl bei „Meine Wahl“ (Plus und Minus)
+  plusMitNullAnteil: 0.05,                      // so selten kommt „+ 0“ bzw. „− 0“ / Ergebnis 0 vor
+  plusUebergangAnteil: 0.5,                     // Anteil der Aufgaben mit Zehnerübergang (Plus und Minus)
   // Belohnungsstufen: "ab" = Mindestanzahl richtiger Antworten. Bilder liegen im Ordner bilder/.
   stufen: [
     { ab: 10, figur: 'Kaffi',    bild: 'bilder/kaffi.svg',    farbe: 'horse', sterne: 5,
@@ -41,6 +41,17 @@ const RECHENARTEN = {
       standard:    { name: 'Standard',   info: 'Ergebnisse bis 100', text: 'Plusaufgaben mit Ergebnissen bis 100.' },
       individuell: { name: 'Meine Wahl', info: 'Höchstwert wählen' },
     },
+    frageMax: 'Bis zu welchem Ergebnis?',
+  },
+  minus: {
+    name: 'Minusrechnen', kurz: 'Minus', zeichen: '−', csv: '-', rechne: (a, b) => a - b,
+    stufenReihe: ['einfach', 'standard', 'individuell'],
+    stufen: {
+      einfach:     { name: 'Einfach',    info: 'Zahlen bis 10',  text: 'Minusaufgaben mit Zahlen bis 10. Das Ergebnis ist nie kleiner als 0.' },
+      standard:    { name: 'Standard',   info: 'Zahlen bis 100', text: 'Minusaufgaben mit Zahlen bis 100. Das Ergebnis ist nie kleiner als 0.' },
+      individuell: { name: 'Meine Wahl', info: 'Höchstwert wählen' },
+    },
+    frageMax: 'Bis zu welcher Zahl?',
   },
   mal: {
     name: 'Malrechnen', kurz: 'Mal', zeichen: '×', csv: 'x', rechne: (a, b) => a * b,
@@ -84,7 +95,8 @@ function modusAus(w) {
     // einfachMax gibt es nur für alte Übungen (Version 0.2: Einfach war bis 20)
     const max = w.stufe === 'individuell' ? w.max : w.stufe === 'standard' ? 100 : (w.einfachMax || 10);
     const eigenerMax = w.stufe === 'individuell' || (w.stufe === 'einfach' && max !== 10);
-    // Bis zu 10 Ergebnis-Bereiche zwischen 2 und max, z. B. bei 100: 2–11, 12–21 … 92–100; bei 10: 2, 3, … 10
+    // Plus: Ergebnis, Minus: Ausgangszahl – verteilt auf bis zu 10 Bereiche zwischen 2 und max,
+    // z. B. bei 100: 2–11, 12–21 … 92–100; bei 10: 2, 3, … 10
     const anzahl = Math.min(10, max - 1);
     const bereich = i => [2 + Math.floor(i * (max - 1) / anzahl), 1 + Math.floor((i + 1) * (max - 1) / anzahl)];
     Object.assign(m, {
@@ -92,14 +104,16 @@ function modusAus(w) {
       maxErgebnis: max,
       option: eigenerMax ? { max } : null,
       optionText: eigenerMax ? `bis ${max}` : '',
-      key: w.stufe === 'standard' ? 'plus|standard' : `plus|${w.stufe}|${max}`,
+      key: w.stufe === 'standard' ? `${w.rechenart}|standard` : `${w.rechenart}|${w.stufe}|${max}`,
       gruppen: Array.from({ length: anzahl }, (_, i) => i),
       erzeuge: (g, benutzt, wunschUebergang) => {
         const [lo, hi] = bereich(g);
         for (let v = 0; v < 80; v++) {
-          const s = lo + zufall(hi - lo + 1);
-          const a = Math.random() < CONFIG.plusMitNullAnteil ? (Math.random() < 0.5 ? 0 : s) : 1 + zufall(s - 1);
-          const b = s - a, uebergang = (a % 10) + (b % 10) >= 10;
+          const s = lo + zufall(hi - lo + 1);   // Plus: Ergebnis, Minus: Ausgangszahl
+          const teil = Math.random() < CONFIG.plusMitNullAnteil ? (Math.random() < 0.5 ? 0 : s) : 1 + zufall(s - 1);
+          let a, b, uebergang;
+          if (w.rechenart === 'minus') { a = s; b = teil; uebergang = (a % 10) < (b % 10); }   // nie unter 0
+          else { a = teil; b = s - teil; uebergang = (a % 10) + (b % 10) >= 10; }
           if (benutzt.has(a + z + b)) continue;
           if (v < 50 && wunschUebergang !== undefined && uebergang !== wunschUebergang) continue;
           return { a, b, uebergang };
@@ -208,7 +222,7 @@ function neueRunde(modus, key) {
   const anzahl = new Map(modus.gruppen.map(g => [g, 0]));
   letzteGruppen(key, modus.key, CONFIG.historie - n).forEach(g => { if (anzahl.has(g)) anzahl.set(g, anzahl.get(g) + 1); });
   const ueber = Math.round(n * CONFIG.plusUebergangAnteil);
-  const wuensche = modus.rechenart === 'plus' && modus.maxErgebnis > 10 ? mische(Array.from({ length: n }, (_, i) => i < ueber)) : [];
+  const wuensche = modus.maxErgebnis > 10 ? mische(Array.from({ length: n }, (_, i) => i < ueber)) : [];
   const benutzt = new Set(), runde = [];
   for (let k = 0; k < n; k++) {
     const reihenfolge = mische(modus.gruppen.slice()).sort((x, y) => anzahl.get(x) - anzahl.get(y));
@@ -333,8 +347,8 @@ function zeigeAuswahl() {
   if (auswahl.rechenart === 'mal' && auswahl.stufe === 'einfach') {
     opt.innerHTML = `<h3>Welche Reihe möchtest du üben?</h3><div class="choice-grid six">${ZAHLEN.map(r =>
       `<button type="button" class="choice" data-reihe="${r}" aria-pressed="${r === auswahl.reihe}">${r}er</button>`).join('')}</div>`;
-  } else if (auswahl.rechenart === 'plus' && auswahl.stufe === 'individuell') {
-    opt.innerHTML = `<h3>Bis zu welchem Ergebnis?</h3><div class="choice-grid three">${CONFIG.plusHoechstwerte.map(m =>
+  } else if (auswahl.stufe === 'individuell') {
+    opt.innerHTML = `<h3>${ra.frageMax}</h3><div class="choice-grid three">${CONFIG.plusHoechstwerte.map(m =>
       `<button type="button" class="choice" data-max="${m}" aria-pressed="${m === auswahl.max}">bis ${m}</button>`).join('')}</div>`;
   } else {
     opt.innerHTML = `<h3>${ra.name} · ${ra.stufen[auswahl.stufe].name}</h3><p>${ra.stufen[auswahl.stufe].text}</p>`;
@@ -592,7 +606,7 @@ function zeigeUebersicht() {
 function oeffneDetail(id) {
   const u = db.uebungen.find(x => x.id === id);
   if (!u) return;
-  const a = auswerten(u.rechnungen), plus = u.rechenart === 'plus';
+  const a = auswerten(u.rechnungen), plus = u.rechenart !== 'mal';   // Plus und Minus: Zehnerübergang
   $('#d-title').textContent = `Übung von ${u.kind}` + (u.abgebrochen ? ' (abgebrochen)' : '');
   $('#d-sub').textContent = `${fmtDatum(u.start)} · ${modusVonUebung(u).label}`;
   $('#d-correct').innerHTML = `${a.richtig} <small>von ${a.anzahl}</small>`;
@@ -631,7 +645,7 @@ $('#export-csv').addEventListener('click', () => {
     const d = new Date(u.start), datum = d.toLocaleDateString('de-AT'), zeit = d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
     const ra = RECHENARTEN[u.rechenart], stufe = modusVonUebung(u).stufeText;
     u.rechnungen.forEach((r, j) => zeilen.push([datum, zeit, u.kind, ra.name, stufe, u.abgebrochen ? 'ja' : 'nein', j + 1,
-      `${r.a} ${RECHENARTEN[r.op].csv} ${r.b}`, r.op === 'mal' ? r.reihe : '', r.op === 'plus' ? (r.uebergang ? 'ja' : 'nein') : '',
+      `${r.a} ${RECHENARTEN[r.op].csv} ${r.b}`, r.op === 'mal' ? r.reihe : '', r.op !== 'mal' ? (r.uebergang ? 'ja' : 'nein') : '',
       r.eingabe, r.loesung, r.richtig ? 'ja' : 'nein', (r.ms / 1000).toFixed(1).replace('.', ',')]));
   });
   const csv = '﻿' + zeilen.map(z => z.map(f => `"${String(f).replace(/"/g, '""')}"`).join(';')).join('\r\n');

@@ -292,3 +292,6 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .choice.bald { cursor: default; background: var(--surface-2); border-style: dashed; box-shadow: none; color: var(--muted); }
 .choice.bald b { color: var(--muted); opacity: .6; }
 .choice.bald:active { transform: none; box-shadow: none; }
+
+/* Version 0.4: Aufgabenspalte darf nicht breiter werden, die Aufgabe wird stattdessen verkleinert */
+.task-side { min-width: 0; }

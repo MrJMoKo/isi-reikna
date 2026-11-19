@@ -1,6 +1,6 @@
 # ISI reikna
 
-Lern-App zum Rechnen üben (Plusrechnen und Malrechnen, Minus und Dividieren folgen) für Volksschulkinder, optimiert für das iPad im Querformat.
+Lern-App zum Rechnen üben (Plus-, Minus- und Malrechnen, Dividieren folgt) für Volksschulkinder, optimiert für das iPad im Querformat.
 Reines HTML, CSS und JavaScript, ohne Installation, ohne Server und ohne Internetverbindung nutzbar.
 
 ## Starten
@@ -13,18 +13,19 @@ Für die iPad-Ansicht: `F12` → `Strg+Umschalt+M` → oben „iPad“ wählen u
 
 **Eigener Webserver:** Den ganzen Ordner unverändert hochladen. Es wird keine Server-Software benötigt.
 
-## Funktionen (Version 0.3)
+## Funktionen (Version 0.4)
 
 - Name eingeben (der zuletzt verwendete Name ist vorausgefüllt), dann Rechenart und Schwierigkeit wählen
   (die letzte Auswahl ist vorausgewählt), danach Countdown 3 – 2 – 1
 - 10 Aufgaben pro Runde, Eingabe über großes Ziffernfeld (oder Tastatur)
 
-Auswahl-Bildschirm: Rechenarten in zwei Zeilen, **Plus | Minus** und **Mal | Dividieren** (Minus und Dividieren
-sind bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden überall orange dargestellt.
+Auswahl-Bildschirm: Rechenarten in zwei Zeilen, **Plus | Minus** und **Mal | Dividieren** (Dividieren
+ist bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden überall orange dargestellt.
 
 | Rechenart | Stufe 1         | Stufe 2         | Stufe 3 |
 |-----------|-----------------|-----------------|---------|
 | Plus      | Einfach: Ergebnisse bis 10 | Standard: Ergebnisse bis 100 | Meine Wahl: Höchstwert 20 / 50 / 100 / 200 / 500 / 1000 |
+| Minus     | Einfach: Zahlen bis 10 | Standard: Zahlen bis 100 | Meine Wahl: höchste Ausgangszahl 20 / 50 / 100 / 200 / 500 / 1000 |
 | Mal       | Einfach: eine gewählte Reihe (0er bis 10er) | Standard: alle Reihen 0 bis 10 | Schwierig: Reihen 5 bis 10, jedes Ergebnis über 25 |
 
 - **Gleichverteilung:** Pro Kind **und pro Übungsart** (z. B. „Mal · Einfach · 7er“ oder „Plus · Meine Wahl · bis 500“)
@@ -34,6 +35,9 @@ sind bis zur Umsetzung als „kommt bald“ ausgegraut). Rechenzeichen werden ü
   - Plus: Die Ergebnisse verteilen sich gleichmäßig auf bis zu 10 Bereiche (bei bis 100: 2–11, 12–21 … 92–100,
     bei bis 10: jedes Ergebnis 2 … 10 einzeln). Etwa die Hälfte der Aufgaben hat einen Zehnerübergang (bei „bis 10“
     nur die Aufgaben mit Ergebnis 10, bei „bis 20“ weniger), „+ 0“ kommt nur selten vor.
+  - Minus: Die Grenze gilt für die Ausgangszahl, das Ergebnis ist nie kleiner als 0. Die Ausgangszahlen verteilen
+    sich gleichmäßig auf bis zu 10 Bereiche, die zweite Zahl ist frei zwischen 1 und der Ausgangszahl.
+    Etwa die Hälfte hat einen Zehnerübergang (z. B. 43 − 8); „− 0“ und Ergebnis 0 kommen nur selten vor.
   - Es werden nur Gruppen verwendet, in denen es passende Aufgaben gibt. Ist eine erschöpft, kommt die nächstseltene dran.
   - Keine Rechnung kommt in einer Runde doppelt vor, eine falsch gelöste also auch nicht.
 - Meldung „Richtig!“ (automatisch weiter nach 2 s) bzw. „Leider falsch.“ mit Lösung (weiter nach 5 s), „Weiter“-Taste jederzeit
@@ -78,7 +82,7 @@ den Dateinamen in `CONFIG.stufen` in `app.js` anpassen). Die Bilder werden rund 
 
 1. Eltern-Dashboard: beste und schlechteste Zahlenreihen über die letzten 30 Übungen
 2. Mehrere Kinder getrennt im Dashboard (Übungen werden bereits pro Kind gespeichert)
-3. Weitere Rechenarten: Minusrechnen und Dividieren (Plätze im Auswahl-Bildschirm sind schon vorgesehen)
+3. Dividieren (Platz im Auswahl-Bildschirm ist vorgesehen, Zeichen ÷ siehe #6)
 4. Malrechnen: zusätzliche Schwierigkeitsstufe „Individuell“ (genaue Definition noch offen)
 5. Bilderauswahl für Eltern
 
