@@ -1,4 +1,4 @@
-/* ISI reikna – Rechnen üben (Version 0.2.1)
+/* ISI reikna – Rechnen üben (Version 0.3)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';
@@ -31,25 +31,29 @@ const STERN_BILD = 'bilder/stern.svg';
 const ZAHLEN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 /* ======================= Rechenarten und Stufen ======================= */
-const STUFEN = ['einfach', 'standard', 'schwierig'];
+// Reihenfolge der Anzeige: Plus, (Minus), Mal, (Dividieren). Jede Rechenart hat ihre eigenen drei Stufen.
 const RECHENARTEN = {
+  plus: {
+    name: 'Plusrechnen', kurz: 'Plus', zeichen: '+', csv: '+', rechne: (a, b) => a + b,
+    stufenReihe: ['einfach', 'standard', 'individuell'],
+    stufen: {
+      einfach:     { name: 'Einfach',    info: 'Ergebnisse bis 10',  text: 'Plusaufgaben mit Ergebnissen bis 10.' },
+      standard:    { name: 'Standard',   info: 'Ergebnisse bis 100', text: 'Plusaufgaben mit Ergebnissen bis 100.' },
+      individuell: { name: 'Meine Wahl', info: 'Höchstwert wählen' },
+    },
+  },
   mal: {
     name: 'Malrechnen', kurz: 'Mal', zeichen: '×', csv: 'x', rechne: (a, b) => a * b,
+    stufenReihe: ['einfach', 'standard', 'schwierig'],
     stufen: {
       einfach:   { name: 'Einfach',   info: 'Eine Reihe üben' },
       standard:  { name: 'Standard',  info: 'Alle Reihen 0 bis 10', text: 'Alle Reihen von 0 bis 10 kommen gleich oft dran.' },
       schwierig: { name: 'Schwierig', info: 'Reihen 5 bis 10, über 25', text: 'Nur die Reihen 5 bis 10. Jedes Ergebnis ist größer als 25.' },
     },
   },
-  plus: {
-    name: 'Plusrechnen', kurz: 'Plus', zeichen: '+', csv: '+', rechne: (a, b) => a + b,
-    stufen: {
-      einfach:   { name: 'Einfach',   info: 'Ergebnis bis 20',  text: 'Plusaufgaben mit einem Ergebnis bis 20.' },
-      standard:  { name: 'Standard',  info: 'Ergebnis bis 100', text: 'Plusaufgaben mit einem Ergebnis bis 100.' },
-      schwierig: { name: 'Schwierig', info: 'Höchstwert wählen' },
-    },
-  },
 };
+// Position einer Stufe (0 = leicht, 1 = mittel, 2 = dritte Stufe), damit beim Wechsel der Rechenart die Stufe passt
+const stufenPosition = stufe => Math.max(...Object.values(RECHENARTEN).map(ra => ra.stufenReihe.indexOf(stufe)));
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const zufall = n => Math.floor(Math.random() * n);
@@ -77,15 +81,19 @@ function modusAus(w) {
         erzeuge: (g, benutzt) => freiAus(ZAHLEN.map(a => ({ a, b: g })), benutzt, z) });
     }
   } else {
-    const max = w.stufe === 'einfach' ? 20 : w.stufe === 'standard' ? 100 : w.max;
-    // 10 Ergebnis-Bereiche zwischen 2 und max, z. B. bei 100: 2–11, 12–21 … 92–100
-    const bereich = i => [2 + Math.floor(i * (max - 1) / 10), 1 + Math.floor((i + 1) * (max - 1) / 10)];
+    // einfachMax gibt es nur für alte Übungen (Version 0.2: Einfach war bis 20)
+    const max = w.stufe === 'individuell' ? w.max : w.stufe === 'standard' ? 100 : (w.einfachMax || 10);
+    const eigenerMax = w.stufe === 'individuell' || (w.stufe === 'einfach' && max !== 10);
+    // Bis zu 10 Ergebnis-Bereiche zwischen 2 und max, z. B. bei 100: 2–11, 12–21 … 92–100; bei 10: 2, 3, … 10
+    const anzahl = Math.min(10, max - 1);
+    const bereich = i => [2 + Math.floor(i * (max - 1) / anzahl), 1 + Math.floor((i + 1) * (max - 1) / anzahl)];
     Object.assign(m, {
       maxStellen: String(max).length,
-      option: w.stufe === 'schwierig' ? { max } : null,
-      optionText: w.stufe === 'schwierig' ? `bis ${max}` : '',
-      key: w.stufe === 'schwierig' ? `plus|schwierig|${max}` : `plus|${w.stufe}`,
-      gruppen: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      maxErgebnis: max,
+      option: eigenerMax ? { max } : null,
+      optionText: eigenerMax ? `bis ${max}` : '',
+      key: w.stufe === 'standard' ? 'plus|standard' : `plus|${w.stufe}|${max}`,
+      gruppen: Array.from({ length: anzahl }, (_, i) => i),
       erzeuge: (g, benutzt, wunschUebergang) => {
         const [lo, hi] = bereich(g);
         for (let v = 0; v < 80; v++) {
@@ -109,7 +117,7 @@ function modusAus(w) {
 const SPEICHER_KEY = 'isi-reikna-daten';
 function leereDaten() {
   return { version: 2, pin: CONFIG.startPin, ton: true, letzterName: '',
-    letzteAuswahl: { rechenart: 'mal', stufe: 'standard', reihe: 2, max: 200 }, uebungen: [] };
+    letzteAuswahl: { rechenart: 'plus', stufe: 'standard', reihe: 2, max: 200 }, uebungen: [] };
 }
 // Ältere Übungen (Version 0.1: nur Mal, Stufe „normal“) in das neue Format bringen
 function migriere(u) {
@@ -119,6 +127,9 @@ function migriere(u) {
     u.option = u.option || null;
     u.modus = 'mal|standard';
   }
+  // Version 0.2 → 0.3: Plus „Schwierig“ heißt jetzt „Meine Wahl“, Plus „Einfach“ war damals bis 20
+  if (u.rechenart === 'plus' && u.stufe === 'schwierig') { u.stufe = 'individuell'; u.modus = `plus|individuell|${(u.option || {}).max}`; }
+  if (u.rechenart === 'plus' && u.stufe === 'einfach' && u.modus === 'plus|einfach') { u.option = { max: 20 }; u.modus = 'plus|einfach|20'; }
   (u.rechnungen || []).forEach(r => {
     if (!r.op) r.op = 'mal';
     if (r.loesung === undefined) r.loesung = r.op === 'plus' ? r.a + r.b : r.a * r.b;
@@ -132,6 +143,7 @@ function laden() {
     if (d && (d.version === 1 || d.version === 2) && Array.isArray(d.uebungen)) {
       const neu = Object.assign(leereDaten(), d, { version: 2 });
       neu.letzteAuswahl = Object.assign(leereDaten().letzteAuswahl, d.letzteAuswahl);
+      if (neu.letzteAuswahl.rechenart === 'plus' && neu.letzteAuswahl.stufe === 'schwierig') neu.letzteAuswahl.stufe = 'individuell';
       neu.uebungen.forEach(migriere);
       return neu;
     }
@@ -156,11 +168,13 @@ const fmtMin = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s /
 const fmtDatum = iso => { const d = new Date(iso); return d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ', ' + d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }); };
 const zeichenVon = r => RECHENARTEN[r.op] ? RECHENARTEN[r.op].zeichen : '×';
 const aufgabeText = r => `${r.a} ${zeichenVon(r)} ${r.b}`;
-const fmtR = r => r ? `${fmtS(r.ms)} <small>(${r.a}${zeichenVon(r)}${r.b})</small>` : '–';
+// Wie aufgabeText, aber mit farbigem Rechenzeichen (für die Anzeige)
+const aufgabeHtml = r => `${r.a} <span class="zeichen">${zeichenVon(r)}</span> ${r.b}`;
+const fmtR = r => r ? `${fmtS(r.ms)} <small>(${r.a}<span class="zeichen">${zeichenVon(r)}</span>${r.b})</small>` : '–';
 const stufeFuer = richtig => CONFIG.stufen.find(s => richtig >= s.ab);
 function modusVonUebung(u) {
   const o = u.option || {};
-  return modusAus({ rechenart: u.rechenart, stufe: u.stufe, reihe: o.reihe, max: o.max });
+  return modusAus({ rechenart: u.rechenart, stufe: u.stufe, reihe: o.reihe, max: o.max, einfachMax: u.stufe === 'einfach' ? o.max : undefined });
 }
 
 function auswerten(rechnungen) {
@@ -194,7 +208,7 @@ function neueRunde(modus, key) {
   const anzahl = new Map(modus.gruppen.map(g => [g, 0]));
   letzteGruppen(key, modus.key, CONFIG.historie - n).forEach(g => { if (anzahl.has(g)) anzahl.set(g, anzahl.get(g) + 1); });
   const ueber = Math.round(n * CONFIG.plusUebergangAnteil);
-  const wuensche = modus.rechenart === 'plus' ? mische(Array.from({ length: n }, (_, i) => i < ueber)) : [];
+  const wuensche = modus.rechenart === 'plus' && modus.maxErgebnis > 10 ? mische(Array.from({ length: n }, (_, i) => i < ueber)) : [];
   const benutzt = new Set(), runde = [];
   for (let k = 0; k < n; k++) {
     const reihenfolge = mische(modus.gruppen.slice()).sort((x, y) => anzahl.get(x) - anzahl.get(y));
@@ -306,22 +320,20 @@ $('#name-form').addEventListener('submit', e => {
 /* ======================= Auswahl: Rechenart und Stufe ======================= */
 const auswahl = Object.assign({}, db.letzteAuswahl);
 function zeigeAuswahl() {
-  if (!RECHENARTEN[auswahl.rechenart]) auswahl.rechenart = 'mal';
-  if (!STUFEN.includes(auswahl.stufe)) auswahl.stufe = 'standard';
+  if (!RECHENARTEN[auswahl.rechenart]) auswahl.rechenart = 'plus';
+  const reihe = RECHENARTEN[auswahl.rechenart].stufenReihe;
+  if (!reihe.includes(auswahl.stufe)) auswahl.stufe = reihe[stufenPosition(auswahl.stufe)] || 'standard';
   if (!ZAHLEN.includes(auswahl.reihe)) auswahl.reihe = 2;
   if (!CONFIG.plusHoechstwerte.includes(auswahl.max)) auswahl.max = 200;
   const ra = RECHENARTEN[auswahl.rechenart];
   $('#a-title').textContent = `Was möchtest du üben, ${spiel.kind}?`;
   document.querySelectorAll('[data-rechenart]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rechenart === auswahl.rechenart)));
-  document.querySelectorAll('[data-stufe]').forEach(b => {
-    b.setAttribute('aria-pressed', String(b.dataset.stufe === auswahl.stufe));
-    b.querySelector('small').textContent = ra.stufen[b.dataset.stufe].info;
-  });
+  $('#a-stufen').innerHTML = ra.stufenReihe.map(st => `<button type="button" class="choice level" data-stufe="${st}" aria-pressed="${st === auswahl.stufe}">${ra.stufen[st].name}<small>${ra.stufen[st].info}</small></button>`).join('');
   const opt = $('#a-option');
   if (auswahl.rechenart === 'mal' && auswahl.stufe === 'einfach') {
     opt.innerHTML = `<h3>Welche Reihe möchtest du üben?</h3><div class="choice-grid six">${ZAHLEN.map(r =>
       `<button type="button" class="choice" data-reihe="${r}" aria-pressed="${r === auswahl.reihe}">${r}er</button>`).join('')}</div>`;
-  } else if (auswahl.rechenart === 'plus' && auswahl.stufe === 'schwierig') {
+  } else if (auswahl.rechenart === 'plus' && auswahl.stufe === 'individuell') {
     opt.innerHTML = `<h3>Bis zu welchem Ergebnis?</h3><div class="choice-grid three">${CONFIG.plusHoechstwerte.map(m =>
       `<button type="button" class="choice" data-max="${m}" aria-pressed="${m === auswahl.max}">bis ${m}</button>`).join('')}</div>`;
   } else {
@@ -332,7 +344,11 @@ function zeigeAuswahl() {
 $('#s-auswahl').addEventListener('click', e => {
   const b = e.target.closest('[data-rechenart], [data-stufe], [data-reihe], [data-max]');
   if (!b) return;
-  if (b.dataset.rechenart) auswahl.rechenart = b.dataset.rechenart;
+  if (b.dataset.rechenart) {
+    const pos = stufenPosition(auswahl.stufe);
+    auswahl.rechenart = b.dataset.rechenart;
+    auswahl.stufe = RECHENARTEN[auswahl.rechenart].stufenReihe[pos] || 'standard';
+  }
   if (b.dataset.stufe) auswahl.stufe = b.dataset.stufe;
   if (b.dataset.reihe !== undefined) auswahl.reihe = Number(b.dataset.reihe);
   if (b.dataset.max) auswahl.max = Number(b.dataset.max);
@@ -386,7 +402,7 @@ window.addEventListener('orientationchange', () => setTimeout(() => { setzeEinhe
 function zeigeAufgabe() {
   const t = spiel.aufgaben[spiel.i];
   spiel.eingabe = ''; spiel.gesperrt = false; spiel.t0 = Date.now();
-  $('#task').textContent = `${aufgabeText(t)} =`;
+  $('#task').innerHTML = `${aufgabeHtml(t)} =`;
   $('#counter').textContent = `Aufgabe ${spiel.i + 1} von ${CONFIG.aufgabenProRunde} · ${RECHENARTEN[spiel.modus.rechenart].name}`;
   $('#dots').innerHTML = spiel.aufgaben.map((_, j) => `<i class="${j < spiel.rechnungen.length ? (spiel.rechnungen[j].richtig ? 'ok' : 'no') : j === spiel.i ? 'now' : ''}"></i>`).join('');
   $('#feedback').hidden = true;
@@ -423,7 +439,7 @@ function pruefe() {
   fb.innerHTML = `<div class="fb-icon">${ok
       ? '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="currentColor"/><path d="M14 25l7 7 13-15" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
       : '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="currentColor"/><path d="M16 16l16 16M32 16L16 32" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></svg>'}</div>
-    <div class="fb-text"><b>${ok ? 'Richtig!' : 'Leider falsch.'}</b><span>${ok ? 'Toll gerechnet.' : `Richtig ist: ${aufgabeText(t)} = ${t.loesung}`}</span>
+    <div class="fb-text"><b>${ok ? 'Richtig!' : 'Leider falsch.'}</b><span>${ok ? 'Toll gerechnet.' : `Richtig ist: ${aufgabeHtml(t)} = ${t.loesung}`}</span>
     <div class="auto-bar"><i style="animation-duration:${wartezeit}ms"></i></div></div>
     <button class="big-btn" type="button" id="next">${letzte ? 'Zum Ergebnis' : 'Weiter'}</button>`;
   fb.hidden = false;
@@ -497,8 +513,8 @@ function zeigeErgebnis(u) {
   $('#r-mode').textContent = modusVonUebung(u).label;
   $('#r-correct').textContent = `${a.richtig} von ${CONFIG.aufgabenProRunde}`;
   $('#r-total').textContent = fmtMin(u.dauerMs);
-  $('#r-fast').innerHTML = `${fmtS(a.schnellste.ms)} <small>bei ${aufgabeText(a.schnellste)}</small>`;
-  $('#r-slow').innerHTML = `${fmtS(a.langsamste.ms)} <small>bei ${aufgabeText(a.langsamste)}</small>`;
+  $('#r-fast').innerHTML = `${fmtS(a.schnellste.ms)} <small>bei ${aufgabeHtml(a.schnellste)}</small>`;
+  $('#r-slow').innerHTML = `${fmtS(a.langsamste.ms)} <small>bei ${aufgabeHtml(a.langsamste)}</small>`;
 }
 
 /* ======================= PIN ======================= */
@@ -586,7 +602,7 @@ function oeffneDetail(id) {
   $('#d-slow').innerHTML = fmtR(a.langsamste);
   $('#d-info-head').textContent = plus ? 'Zehnerübergang' : 'Reihe';
   $('#calcs').innerHTML = u.rechnungen.length
-    ? u.rechnungen.map((r, j) => `<tr><td>${j + 1}</td><td><b>${aufgabeText(r)}</b></td><td>${plus ? (r.uebergang ? 'ja' : 'nein') : r.reihe + 'er'}</td>
+    ? u.rechnungen.map((r, j) => `<tr><td>${j + 1}</td><td><b>${aufgabeHtml(r)}</b></td><td>${plus ? (r.uebergang ? 'ja' : 'nein') : r.reihe + 'er'}</td>
       <td>${r.eingabe}</td><td>${r.loesung}</td>
       <td><span class="pill ${r.richtig ? 'ok' : 'no'}">${r.richtig ? 'richtig' : 'falsch'}</span></td><td>${fmtS(r.ms)}</td></tr>`).join('')
     : '<tr><td colspan="7">In dieser Runde wurde keine Aufgabe beantwortet.</td></tr>';

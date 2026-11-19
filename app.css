@@ -282,3 +282,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* Logo: „ISI“ blau, „reikna“ in der Komplementärfarbe */
 .brand, .hello h1 { color: var(--primary); }
 .brand span, .hello h1 span { color: var(--brand-2); }
+
+/* Version 0.3: Rechenarten in zwei Zeilen (Plus | Minus, Mal | Dividieren), orange Rechenzeichen */
+.zeichen { color: var(--brand-2); }
+.choice.op { justify-content: flex-start; text-align: left; padding: calc(1.1 * var(--cq)) calc(1.6 * var(--cq)); font-size: clamp(16px, calc(2.1 * var(--cq)), 26px); }
+.choice.op b { color: var(--brand-2); width: 1.1em; text-align: center; font-size: 1.7em; }
+.choice.op span { display: grid; }
+.choice.op small { font-family: var(--font-body); font-weight: 700; font-size: clamp(11px, calc(1.2 * var(--cq)), 14px); color: var(--muted); }
+.choice.bald { cursor: default; background: var(--surface-2); border-style: dashed; box-shadow: none; color: var(--muted); }
+.choice.bald b { color: var(--muted); opacity: .6; }
+.choice.bald:active { transform: none; box-shadow: none; }
