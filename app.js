@@ -1,4 +1,4 @@
-/* ISI reikna – Rechnen üben (Version 0.5)
+/* ISI reikna – Rechnen üben (Version 0.6)
    Reines JavaScript ohne Frameworks. Läuft direkt aus der Datei (Doppelklick auf index.html)
    oder von einem Webserver. Alle Daten bleiben im Browser des Geräts (localStorage). */
 'use strict';
@@ -61,6 +61,18 @@ const RECHENARTEN = {
       standard:  { name: 'Standard',  info: 'Alle Reihen 0 bis 10', text: 'Alle Reihen von 0 bis 10 kommen gleich oft dran.' },
       schwierig: { name: 'Schwierig', info: 'Reihen 5 bis 10, über 25', text: 'Nur die Reihen 5 bis 10. Jedes Ergebnis ist größer als 25.' },
     },
+    reihen: ZAHLEN,
+  },
+  div: {
+    // Zeichen ÷: wird als Minuszeichen mit je einem Punkt darüber und darunter dargestellt (siehe zeichenHtml)
+    name: 'Dividieren', kurz: 'Dividieren', zeichen: '÷', csv: ':', rechne: (a, b) => a / b,
+    stufenReihe: ['einfach', 'standard', 'schwierig'],
+    stufen: {
+      einfach:   { name: 'Einfach',   info: 'Eine Reihe üben' },
+      standard:  { name: 'Standard',  info: 'Alle Reihen 1 bis 10', text: 'Alle Reihen von 1 bis 10 kommen gleich oft dran. Jede Aufgabe geht ohne Rest auf.' },
+      schwierig: { name: 'Schwierig', info: 'Reihen 5 bis 10, über 25', text: 'Nur die Reihen 5 bis 10. Die erste Zahl ist immer größer als 25.' },
+    },
+    reihen: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
   },
 };
 // Position einer Stufe (0 = leicht, 1 = mittel, 2 = dritte Stufe), damit beim Wechsel der Rechenart die Stufe passt
@@ -78,7 +90,24 @@ const freiAus = (kandidaten, benutzt, z) => pick(kandidaten.filter(k => !benutzt
 function modusAus(w) {
   const ra = RECHENARTEN[w.rechenart], st = ra.stufen[w.stufe], z = ra.zeichen;
   const m = { rechenart: w.rechenart, stufe: w.stufe, option: null, zeichen: z, rechne: ra.rechne };
-  if (w.rechenart === 'mal') {
+  if (w.rechenart === 'div') {
+    // Dividieren als Umkehrung des Malrechnens: a = Ergebnis × Teiler, Teiler (Reihe) nie 0, immer ohne Rest
+    m.maxStellen = 2;
+    const EINS_BIS_ZEHN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    const aufgabe = (q, g) => ({ a: q * g, b: g });
+    if (w.stufe === 'einfach') {
+      const r = w.reihe;   // die ganze Reihe aufsteigend: r ÷ r, 2r ÷ r … 10r ÷ r (ohne 0 ÷ r)
+      Object.assign(m, { option: { reihe: r }, optionText: `${r}er-Reihe`, key: `div|einfach|${r}`,
+        gruppen: EINS_BIS_ZEHN, festeRunde: () => EINS_BIS_ZEHN.map(q => Object.assign(aufgabe(q, r), { gruppe: q })) });
+    } else if (w.stufe === 'schwierig') {
+      Object.assign(m, { key: 'div|schwierig', gruppen: [5, 6, 7, 8, 9, 10],
+        erzeuge: (g, benutzt) => freiAus(EINS_BIS_ZEHN.filter(q => q * g > 25).map(q => aufgabe(q, g)), benutzt, z) });
+    } else {
+      Object.assign(m, { key: 'div|standard', gruppen: EINS_BIS_ZEHN,
+        erzeuge: (g, benutzt) => (Math.random() < CONFIG.plusMitNullAnteil && freiAus([aufgabe(0, g)], benutzt, z))
+          || freiAus(EINS_BIS_ZEHN.map(q => aufgabe(q, g)), benutzt, z) });
+    }
+  } else if (w.rechenart === 'mal') {
     m.maxStellen = 3;
     if (w.stufe === 'einfach') {
       const r = w.reihe;
@@ -184,8 +213,12 @@ const fmtDatum = iso => { const d = new Date(iso); return d.toLocaleDateString('
 const zeichenVon = r => RECHENARTEN[r.op] ? RECHENARTEN[r.op].zeichen : '×';
 const aufgabeText = r => `${r.a} ${zeichenVon(r)} ${r.b}`;
 // Wie aufgabeText, aber mit farbigem Rechenzeichen (für die Anzeige)
-const aufgabeHtml = r => `${r.a} <span class="zeichen">${zeichenVon(r)}</span> ${r.b}`;
-const fmtR = r => r ? `${fmtS(r.ms)} <small>(${r.a}<span class="zeichen">${zeichenVon(r)}</span>${r.b})</small>` : '–';
+// Divisionszeichen: dasselbe Minuszeichen wie beim Minus, Punkte darüber und darunter per CSS (Issue #6)
+const zeichenHtml = op => op === 'div'
+  ? '<span class="zeichen geteilt" role="img" aria-label="geteilt durch">−</span>'
+  : `<span class="zeichen">${RECHENARTEN[op] ? RECHENARTEN[op].zeichen : '×'}</span>`;
+const aufgabeHtml = r => `${r.a} ${zeichenHtml(r.op)} ${r.b}`;
+const fmtR = r => r ? `${fmtS(r.ms)} <small>(${r.a}${zeichenHtml(r.op)}${r.b})</small>` : '–';
 const stufeFuer = richtig => CONFIG.stufen.find(s => richtig >= s.ab);
 function modusVonUebung(u) {
   const o = u.option || {};
@@ -340,14 +373,15 @@ function zeigeAuswahl() {
   const reihe = RECHENARTEN[auswahl.rechenart].stufenReihe;
   if (!reihe.includes(auswahl.stufe)) auswahl.stufe = reihe[stufenPosition(auswahl.stufe)] || 'standard';
   if (!ZAHLEN.includes(auswahl.reihe)) auswahl.reihe = 2;
+  if (RECHENARTEN[auswahl.rechenart].reihen && !RECHENARTEN[auswahl.rechenart].reihen.includes(auswahl.reihe)) auswahl.reihe = 2;
   if (!CONFIG.plusHoechstwerte.includes(auswahl.max)) auswahl.max = 200;
   const ra = RECHENARTEN[auswahl.rechenart];
   $('#a-title').textContent = `Was möchtest du üben, ${spiel.kind}?`;
   document.querySelectorAll('[data-rechenart]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.rechenart === auswahl.rechenart)));
   $('#a-stufen').innerHTML = ra.stufenReihe.map(st => `<button type="button" class="choice level" data-stufe="${st}" aria-pressed="${st === auswahl.stufe}">${ra.stufen[st].name}<small>${ra.stufen[st].info}</small></button>`).join('');
   const opt = $('#a-option');
-  if (auswahl.rechenart === 'mal' && auswahl.stufe === 'einfach') {
-    opt.innerHTML = `<h3>Welche Reihe möchtest du üben?</h3><div class="choice-grid six">${ZAHLEN.map(r =>
+  if (ra.reihen && auswahl.stufe === 'einfach') {
+    opt.innerHTML = `<h3>Welche Reihe möchtest du üben?</h3><div class="choice-grid six">${ra.reihen.map(r =>
       `<button type="button" class="choice" data-reihe="${r}" aria-pressed="${r === auswahl.reihe}">${r}er</button>`).join('')}</div>`;
   } else if (auswahl.stufe === 'individuell') {
     opt.innerHTML = `<h3>${ra.frageMax}</h3><div class="choice-grid three">${CONFIG.plusHoechstwerte.map(m =>
@@ -447,7 +481,7 @@ function pruefe() {
   const t = spiel.aufgaben[spiel.i], wert = Number(spiel.eingabe), ok = wert === t.loesung;
   spiel.letzteAntwort = Date.now();
   const r = { op: t.op, a: t.a, b: t.b, loesung: t.loesung, gruppe: t.gruppe, eingabe: wert, richtig: ok, ms: spiel.letzteAntwort - spiel.t0 };
-  if (t.op === 'mal') r.reihe = t.b; else r.uebergang = t.uebergang;
+  if (t.op === 'mal' || t.op === 'div') r.reihe = t.b; else r.uebergang = t.uebergang;
   spiel.rechnungen.push(r);
   spiel.gesperrt = true;
   zeigePunkte();   // Issue #1: Kreis sofort grün/rot füllen
@@ -613,7 +647,7 @@ function zeigeUebersicht() {
 function oeffneDetail(id) {
   const u = db.uebungen.find(x => x.id === id);
   if (!u) return;
-  const a = auswerten(u.rechnungen), plus = u.rechenart !== 'mal';   // Plus und Minus: Zehnerübergang
+  const a = auswerten(u.rechnungen), plus = u.rechenart === 'plus' || u.rechenart === 'minus';   // Plus und Minus: Zehnerübergang, sonst Reihe
   $('#d-title').textContent = `Übung von ${u.kind}` + (u.abgebrochen ? ' (abgebrochen)' : '');
   $('#d-sub').textContent = `${fmtDatum(u.start)} · ${modusVonUebung(u).label}`;
   $('#d-correct').innerHTML = `${a.richtig} <small>von ${a.anzahl}</small>`;
@@ -652,7 +686,7 @@ $('#export-csv').addEventListener('click', () => {
     const d = new Date(u.start), datum = d.toLocaleDateString('de-AT'), zeit = d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
     const ra = RECHENARTEN[u.rechenart], stufe = modusVonUebung(u).stufeText;
     u.rechnungen.forEach((r, j) => zeilen.push([datum, zeit, u.kind, ra.name, stufe, u.abgebrochen ? 'ja' : 'nein', j + 1,
-      `${r.a} ${RECHENARTEN[r.op].csv} ${r.b}`, r.op === 'mal' ? r.reihe : '', r.op !== 'mal' ? (r.uebergang ? 'ja' : 'nein') : '',
+      `${r.a} ${RECHENARTEN[r.op].csv} ${r.b}`, r.reihe !== undefined ? r.reihe : '', (r.op === 'plus' || r.op === 'minus') ? (r.uebergang ? 'ja' : 'nein') : '',
       r.eingabe, r.loesung, r.richtig ? 'ja' : 'nein', (r.ms / 1000).toFixed(1).replace('.', ',')]));
   });
   const csv = '﻿' + zeilen.map(z => z.map(f => `"${String(f).replace(/"/g, '""')}"`).join(';')).join('\r\n');

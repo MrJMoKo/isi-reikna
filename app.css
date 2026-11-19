@@ -295,3 +295,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 /* Version 0.4: Aufgabenspalte darf nicht breiter werden, die Aufgabe wird stattdessen verkleinert */
 .task-side { min-width: 0; }
+
+/* Version 0.6: Divisionszeichen ÷ = Minuszeichen mit je einem Punkt darüber und darunter (Issue #6) */
+/* Der Strich des Minuszeichens liegt in Fredoka bei ca. 0,6 em (von oben); beide Punkte haben denselben Abstand dazu. */
+.geteilt { position: relative; display: inline-block; line-height: 1; height: 1em; }
+.geteilt::before, .geteilt::after { content: ""; position: absolute; left: 50%; width: .19em; height: .19em; margin-left: -.095em; border-radius: 50%; background: currentColor; }
+.geteilt::before { top: .215em; }
+.geteilt::after { top: .805em; }
+/* Rechenzeichen auch im kleinen Text (Rückmeldung, Zeiten) orange */
+.feedback .zeichen, small .zeichen { color: var(--brand-2); }
+.choice.op b .geteilt { display: inline-block; }
