@@ -100,8 +100,9 @@ den Dateinamen in `CONFIG.stufen` in `app.js` anpassen). Die Bilder werden rund 
 
 Siehe [Issues](https://github.com/MrJMoKo/isi-reikna/issues):
 
+- (Prio 2) Kennzeichnung „Elternbereich“ sieht wie eine Taste aus (#10)
 - (Prio 3) Export: einzelne oder alle Übungen auswählen (#3)
 - (Prio 3) Divisionszeichen ÷ wirkt unnatürlich (#8)
 - (Prio 3) Erklärungstext auf den Schwierigkeits-Tasten entfernen (#9)
-- Kennzeichnung „Elternbereich“ sieht wie eine Taste aus (#10)
-- Alle Daten werden nur lokal im Browser gespeichert (#11)
+- (Prio 3) Alle Daten werden nur lokal im Browser gespeichert (#11) – Ziel: Daten gesichert und auf mehreren
+  Geräten abrufbar; Voraussetzung für das Eltern-Dashboard
